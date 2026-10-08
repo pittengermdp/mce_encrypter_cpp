@@ -1,0 +1,39 @@
+name: CI
+
+# Build-only check for pull requests. The publishing path is `build_and_release.yml`, which
+# triggers on `v*` tags only -- so until this file existed, a pull request here had no check
+# that could pass or fail, and any change to the workflow pins below could only be judged by
+# whoever cut the next release.
+#
+# Deliberately the same commands as the release `build` job, with the artifact upload and the
+# `release` job left off: this proves the program still configures and compiles, and publishes
+# nothing. No secrets are needed, so a fork or Dependabot PR runs it the same way.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Boost dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libboost-all-dev
+
+      - name: Install CMake
+        run: sudo apt-get install -y cmake
+
+      - name: Configure CMake project
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+
+      - name: Build project
+        run: make -C build
